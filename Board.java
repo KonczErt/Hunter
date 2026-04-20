@@ -12,29 +12,19 @@ public class Board {
     private final Field[][] board;
     private final int boardSize;
     private final int maxMoves;
-    private int moveCnt;
-    private Turn crntTurn;
+    private int moveCount;
+    private Turn currentTurn;
 
     public Board(int boardSize){
 
         this.boardSize = boardSize;
         this.maxMoves = 4 * boardSize;
-        this.moveCnt = 0;
-        this.crntTurn = Turn.HUNTED;
+        this.moveCount = 0;
+        this.currentTurn = Turn.HUNTED;
 
         board = new Field[this.boardSize][this.boardSize];
-        for( int i = 0; i < boardSize; i++ ){
-            for( int j = 0; j < boardSize; j++ ){
-                board[i][j] = new Field();
-            }
-        }
-
-        int center = boardSize / 2;
-        board[center][center].setPieceType(Field.PieceType.HUNTED);
-        board[0][0].setPieceType(Field.PieceType.HUNTER);
-        board[0][boardSize - 1].setPieceType(Field.PieceType.HUNTER);
-        board[boardSize - 1][0].setPieceType(Field.PieceType.HUNTER);
-        board[boardSize - 1][boardSize - 1].setPieceType(Field.PieceType.HUNTER);
+        initializeBoard();
+        placePieces();
 
     }
 
@@ -56,9 +46,9 @@ public class Board {
 
     }
 
-    public int getMoveCnt() {
+    public int getMoveCount() {
 
-        return moveCnt;
+        return moveCount;
 
     }
 
@@ -68,23 +58,23 @@ public class Board {
 
     }
 
-    public Turn getCrntTurn(){
+    public Turn getCurrentTurn(){
 
-        return crntTurn;
+        return currentTurn;
 
     }
 
     public List<Point> getValidMoves(int x, int y) {
 
         List<Point> moves = new ArrayList<>();
-        for (int[] d : DIRECTIONS ) {
+        for (int[] direction : DIRECTIONS ) {
 
-            int nx = x + d[0];
-            int ny = y + d[1];
+            int newX = x + direction[0];
+            int newY = y + direction[1];
 
-            if (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize && board[nx][ny].isEmpty()){
+            if (isInsideBoard(newX, newY) && board[newX][newY].isEmpty()){
 
-                moves.add(new Point(nx, ny));
+                moves.add(new Point(newX, newY));
 
             }
 
@@ -107,7 +97,7 @@ public class Board {
 
         }
 
-        if (moveCnt >= maxMoves) {
+        if (moveCount >= maxMoves) {
             return GameState.HUNTED_WIN;
         }
         return GameState.PLAYING;
@@ -116,11 +106,41 @@ public class Board {
 
     public void movePiece(int fromX, int fromY, int toX, int toY){
 
+        if (!getValidMoves(fromX, fromY).contains(new Point(toX, toY))) {
+            throw new IllegalArgumentException("Invalid Move");
+        }
+
         board[toX][toY].setPieceType(board[fromX][fromY].getPieceType());
-        board[fromX][fromY].setPieceType(null);
-        ++moveCnt;
-        crntTurn = (crntTurn == Turn.HUNTED) ? Turn.HUNTER : Turn.HUNTED;
+        board[fromX][fromY].clear();
+        ++moveCount;
+        currentTurn = (currentTurn == Turn.HUNTED) ? Turn.HUNTER : Turn.HUNTED;
 
     }
+
+    private boolean isInsideBoard(int x, int y) {
+        return x >= 0 && x < boardSize && y >= 0 && y < boardSize;
+    }
+
+    private void initializeBoard() {
+
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
+                board[i][j] = new Field();
+            }
+        }
+
+    }
+
+    private void placePieces() {
+
+        int center = boardSize / 2;
+        board[center][center].setPieceType(Field.PieceType.HUNTED);
+        board[0][0].setPieceType(Field.PieceType.HUNTER);
+        board[0][boardSize - 1].setPieceType(Field.PieceType.HUNTER);
+        board[boardSize - 1][0].setPieceType(Field.PieceType.HUNTER);
+        board[boardSize - 1][boardSize - 1].setPieceType(Field.PieceType.HUNTER);
+
+    }
+
 
 }

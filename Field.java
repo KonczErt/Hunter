@@ -18,6 +18,10 @@ public class Field {
         this.pieceType = pieceType;
     }
 
+    public void clear() {
+        pieceType = null;
+    }
+
     public boolean isEmpty() {
         return pieceType == null;
     }

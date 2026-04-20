@@ -6,18 +6,59 @@ public class HunterGUI {
     private final JFrame frame;
     private BoardGUI boardGUI;
 
-    private final int INITIAL_BOARD_SIZE = 5;
-    private final int currentBoardSize = INITIAL_BOARD_SIZE;
+    private static final int INITIAL_BOARD_SIZE = 5;
+    private int currentBoardSize = INITIAL_BOARD_SIZE;
 
     public HunterGUI(){
 
         frame = new JFrame("Hunter");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        boardGUI = new BoardGUI(INITIAL_BOARD_SIZE);
+        createMenuStrip();
+        initialiseBoard(currentBoardSize);
+
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+    }
+
+    private void startNewGame(int boardSize) {
+
+        currentBoardSize = boardSize;
+
+        frame.getContentPane().remove(boardGUI.getBoardPanel());
+        frame.getContentPane().remove(boardGUI.getStatusLabel());
+        boardGUI = new BoardGUI(boardSize);
         boardGUI.setOnGameEnd(() -> startNewGame(currentBoardSize));
         frame.getContentPane().add(boardGUI.getBoardPanel(), BorderLayout.CENTER);
         frame.getContentPane().add(boardGUI.getStatusLabel(), BorderLayout.SOUTH);
+        frame.revalidate();
+        frame.repaint();
+        frame.pack();
+
+    }
+
+    private void initialiseBoard(int boardSize) {
+
+        currentBoardSize = boardSize;
+
+        if(boardGUI != null) {
+            frame.getContentPane().remove(boardGUI.getBoardPanel());
+            frame.getContentPane().remove(boardGUI.getStatusLabel());
+        }
+
+        boardGUI = new BoardGUI(boardSize);
+        boardGUI.setOnGameEnd(() -> startNewGame(currentBoardSize));
+        frame.getContentPane().add(boardGUI.getBoardPanel(), BorderLayout.CENTER);
+        frame.getContentPane().add(boardGUI.getStatusLabel(), BorderLayout.SOUTH);
+        frame.revalidate();
+        frame.repaint();
+        frame.pack();
+
+    }
+
+    private void createMenuStrip() {
 
         JMenuBar menuBar = new JMenuBar();
         frame.setJMenuBar(menuBar);
@@ -29,30 +70,15 @@ public class HunterGUI {
 
         for (int boardSize : boardSizes) {
 
-            JMenuItem sizeMenuItem = new JMenuItem(boardSize + "x" + " (max" + (4 * boardSize) + " moves)");
+            JMenuItem sizeMenuItem = new JMenuItem(boardSize + "x" + boardSize);
             newMenu.add(sizeMenuItem);
             sizeMenuItem.addActionListener(e -> startNewGame(boardSize));
 
         }
 
         JMenuItem exitMenuItem = new JMenuItem("Exit");
-        gameMenu.add(exitMenuItem);
         exitMenuItem.addActionListener(e -> System.exit(0));
-
-        frame.pack();
-        frame.setVisible(true);
-
-    }
-
-    private void startNewGame(int boardSize) {
-
-        frame.getContentPane().remove(boardGUI.getBoardPanel());
-        frame.getContentPane().remove(boardGUI.getStatusLabel());
-        boardGUI = new BoardGUI(boardSize);
-        boardGUI.setOnGameEnd(() -> startNewGame(currentBoardSize));
-        frame.getContentPane().add(boardGUI.getBoardPanel(), BorderLayout.CENTER);
-        frame.getContentPane().add(boardGUI.getStatusLabel(), BorderLayout.SOUTH);
-        frame.pack();
+        gameMenu.add(exitMenuItem);
 
     }
 

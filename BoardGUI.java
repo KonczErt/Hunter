@@ -51,25 +51,8 @@ public class BoardGUI {
         JButton button = buttons[x][y];
         Field field = board.get(x, y);
 
-        if (selectedX == x && selectedY == y) {
-            button.setBackground(COLOR_SELECTED);
-        } else if (isHint[x][y]) {
-            button.setBackground(COLOR_HINT);
-        } else if (field.getPieceType() == Field.PieceType.HUNTED) {
-            button.setBackground(COLOR_HUNTED);
-        } else if (field.getPieceType() == Field.PieceType.HUNTER) {
-            button.setBackground(COLOR_HUNTER);
-        } else {
-            button.setBackground(null);
-        }
-
-        if (field.getPieceType() == Field.PieceType.HUNTED) {
-            button.setText("F");
-        } else if (field.getPieceType() == Field.PieceType.HUNTER) {
-            button.setText("A");
-        } else {
-            button.setText(isHint[x][y] ? "·" : "");
-        }
+        button.setBackground(getButtonBackground(x, y, field));
+        button.setText(getButtonText(x, y, field));
 
     }
 
@@ -81,10 +64,36 @@ public class BoardGUI {
         }
     }
 
+    private Color getButtonBackground(int x, int y, Field field) {
+
+        if (selectedX == x && selectedY == y) {
+            return COLOR_SELECTED;
+        } else if (isHint[x][y]) {
+            return COLOR_HINT;
+        } else if (field.getPieceType() == Field.PieceType.HUNTED) {
+            return COLOR_HUNTED;
+        } else if (field.getPieceType() == Field.PieceType.HUNTER) {
+            return COLOR_HUNTER;
+        } else {
+            return null;
+        }
+
+    }
+
+    private String getButtonText(int x, int y, Field field) {
+        if (field.getPieceType() == Field.PieceType.HUNTED) {
+            return "F";
+        } else if (field.getPieceType() == Field.PieceType.HUNTER) {
+            return "H";
+        } else {
+            return isHint[x][y] ? "+" : "";
+        }
+    }
+
     private void updateStatus() {
-        String turn = (board.getCrntTurn() == Board.Turn.HUNTED) ? "Fugitive (F)" : "Attacker (A)";
-        int remaining = board.getMaxMoves() - board.getMoveCnt();
-        statusLabel.setText("Turn: " + turn + "   |   Moves used: " + board.getMoveCnt() + " / " + board.getMaxMoves() + "   |   Remaining: " + remaining);
+        String turn = (board.getCurrentTurn() == Board.Turn.HUNTED) ? "Fugitive (F)" : "Attacker (A)";
+        int remaining = board.getMaxMoves() - board.getMoveCount();
+        statusLabel.setText("Turn: " + turn + "   |   Moves used: " + board.getMoveCount() + " / " + board.getMaxMoves() + "   |   Remaining: " + remaining);
     }
 
     private void clearSelection() {
@@ -133,63 +142,87 @@ public class BoardGUI {
                 return;
             }
 
-            // Move the selected piece to this hint cell
             if (selectedX != -1 && isHint[x][y]) {
-                int fromX = selectedX;
-                int fromY = selectedY;
-                clearSelection();
-                board.movePiece(fromX, fromY, x, y);
-                refresh(fromX, fromY);
-                refresh(x, y);
-                updateStatus();
-
-                if (board.isOver()) {
-                    Board.GameState state = board.getGameState();
-                    String title, message;
-                    if (state == Board.GameState.HUNTER_WIN) {
-                        title = "Attacker Wins!";
-                        message = "The Attacker surrounded the Fugitive!\nA new game will start automatically.";
-                    } else {
-                        title = "Fugitive Wins!";
-                        message = "The Fugitive survived all " + board.getMaxMoves() + " moves!\nA new game will start automatically.";
-                    }
-                    Timer delay = new Timer(150, ev -> {
-                        ((Timer) ev.getSource()).stop();
-                        JOptionPane.showMessageDialog(boardPanel, message, title, JOptionPane.PLAIN_MESSAGE);
-                        if (onGameEnd != null) {
-                            onGameEnd.run();
-                        }
-                    });
-                    delay.setRepeats(false);
-                    delay.start();
-                }
+                moveSelectedPiece(x, y);
                 return;
             }
 
-            // Clear any previous selection
             clearSelection();
+            selectPiece(x, y);
 
-            // Select a piece belonging to the current player
-            Field field = board.get(x, y);
-            Board.Turn turn = board.getCrntTurn();
-            boolean isFugitiveTurn = (turn == Board.Turn.HUNTED && field.getPieceType() == Field.PieceType.HUNTED);
-            boolean isAttackerTurn = (turn == Board.Turn.HUNTER && field.getPieceType() == Field.PieceType.HUNTER);
-
-            if (isFugitiveTurn || isAttackerTurn) {
-
-                List<Point> moves = board.getValidMoves(x, y);
-                if (!moves.isEmpty()) {
-                    selectedX = x;
-                    selectedY = y;
-                    for (Point p : moves) {
-                        isHint[p.x][p.y] = true;
-                        refresh(p.x, p.y);
-                    }
-                    refresh(x, y);
-                }
-
-            }
         }
+    }
+
+    private boolean isCurrentPlayerPiece(Field field) {
+
+        Field.PieceType pieceType = field.getPieceType();
+        return (board.getCurrentTurn() == Board.Turn.HUNTED && pieceType == Field.PieceType.HUNTED) ||
+                (board.getCurrentTurn() == Board.Turn.HUNTER && pieceType == Field.PieceType.HUNTER);
+
+    }
+
+    private void gameEnd() {
+
+        Board.GameState state = board.getGameState();
+        String title, message;
+
+        if (state == Board.GameState.HUNTER_WIN) {
+            title = "Hunter Wins!";
+            message = "The Hunter surrounded the Fugitive!";
+        } else {
+            title = "Fugitive Wins!";
+            message = "The Fugitive survived all " + board.getMaxMoves() + " moves!";
+        }
+
+        Timer delay = new Timer(150, ev -> {
+            ((Timer) ev.getSource()).stop();
+            JOptionPane.showMessageDialog(boardPanel, message, title, JOptionPane.PLAIN_MESSAGE);
+            if (onGameEnd != null) {
+                onGameEnd.run();
+            }
+        });
+
+        delay.setRepeats(false);
+        delay.start();
+
+    }
+
+    private void moveSelectedPiece(int toX, int toY) {
+
+        int fromX = selectedX;
+        int fromY = selectedY;
+
+        clearSelection();
+        board.movePiece(fromX, fromY, toX, toY);
+        refresh(fromX, fromY);
+        refresh(toX, toY);
+        updateStatus();
+
+        if (board.isOver()) {
+            gameEnd();
+        }
+
+    }
+
+    private void selectPiece(int x, int y) {
+
+        Field field = board.get(x, y);
+        List<Point> moves = board.getValidMoves(x, y);
+
+        if (!isCurrentPlayerPiece(field) || moves.isEmpty()) {
+            return;
+        }
+
+        selectedX = x;
+        selectedY = y;
+
+        for (Point p : moves) {
+            isHint[p.x][p.y] = true;
+            refresh(p.x, p.y);
+        }
+
+        refresh(x, y);
+
     }
 
 }
