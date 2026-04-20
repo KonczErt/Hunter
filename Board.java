@@ -4,8 +4,8 @@ import java.util.List;
 
 public class Board {
 
-    public enum Turn { HUNTER, HUNTED }
-    public enum GameState { PLAYING, HUNTER_WIN, HUNTED_WIN }
+    public enum Turn { FUGITIVE, HUNTER }
+    public enum GameState { PLAYING, HUNTER_WIN, FUGITIVE_WIN }
 
     private static final int[][] DIRECTIONS = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} };
 
@@ -20,7 +20,7 @@ public class Board {
         this.boardSize = boardSize;
         this.maxMoves = 4 * boardSize;
         this.moveCount = 0;
-        this.currentTurn = Turn.HUNTED;
+        this.currentTurn = Turn.FUGITIVE;
 
         board = new Field[this.boardSize][this.boardSize];
         initializeBoard();
@@ -87,7 +87,7 @@ public class Board {
 
         for ( int i = 0; i < boardSize; i++ ){
             for ( int j = 0; j < boardSize; j++){
-                if( board[i][j].getPieceType() == Field.PieceType.HUNTED ){
+                if( board[i][j].getPieceType() == Field.PieceType.FUGITIVE ){
                     if ( getValidMoves(i, j).isEmpty()) {
                         return GameState.HUNTER_WIN;
                     }
@@ -98,7 +98,7 @@ public class Board {
         }
 
         if (moveCount >= maxMoves) {
-            return GameState.HUNTED_WIN;
+            return GameState.FUGITIVE_WIN;
         }
         return GameState.PLAYING;
 
@@ -113,7 +113,7 @@ public class Board {
         board[toX][toY].setPieceType(board[fromX][fromY].getPieceType());
         board[fromX][fromY].clear();
         ++moveCount;
-        currentTurn = (currentTurn == Turn.HUNTED) ? Turn.HUNTER : Turn.HUNTED;
+        currentTurn = (currentTurn == Turn.FUGITIVE) ? Turn.HUNTER : Turn.FUGITIVE;
 
     }
 
@@ -134,7 +134,7 @@ public class Board {
     private void placePieces() {
 
         int center = boardSize / 2;
-        board[center][center].setPieceType(Field.PieceType.HUNTED);
+        board[center][center].setPieceType(Field.PieceType.FUGITIVE);
         board[0][0].setPieceType(Field.PieceType.HUNTER);
         board[0][boardSize - 1].setPieceType(Field.PieceType.HUNTER);
         board[boardSize - 1][0].setPieceType(Field.PieceType.HUNTER);

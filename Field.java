@@ -3,7 +3,7 @@ public class Field {
     private PieceType pieceType;
 
     public enum PieceType {
-        HUNTER, HUNTED
+        HUNTER, FUGITIVE
     }
 
     public Field() {

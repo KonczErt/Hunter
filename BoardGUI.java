@@ -6,7 +6,7 @@ import java.util.List;
 
 public class BoardGUI {
 
-    private static final Color COLOR_HUNTED = new Color(50, 180, 80);
+    private static final Color COLOR_FUGITIVE = new Color(50, 180, 80);
     private static final Color COLOR_HUNTER = new Color(200, 55, 55);
     private static final Color COLOR_SELECTED = new Color(131, 146, 220);
     private static final Color COLOR_HINT = new Color(180, 230, 180);
@@ -70,8 +70,8 @@ public class BoardGUI {
             return COLOR_SELECTED;
         } else if (isHint[x][y]) {
             return COLOR_HINT;
-        } else if (field.getPieceType() == Field.PieceType.HUNTED) {
-            return COLOR_HUNTED;
+        } else if (field.getPieceType() == Field.PieceType.FUGITIVE) {
+            return COLOR_FUGITIVE;
         } else if (field.getPieceType() == Field.PieceType.HUNTER) {
             return COLOR_HUNTER;
         } else {
@@ -81,7 +81,7 @@ public class BoardGUI {
     }
 
     private String getButtonText(int x, int y, Field field) {
-        if (field.getPieceType() == Field.PieceType.HUNTED) {
+        if (field.getPieceType() == Field.PieceType.FUGITIVE) {
             return "F";
         } else if (field.getPieceType() == Field.PieceType.HUNTER) {
             return "H";
@@ -91,7 +91,7 @@ public class BoardGUI {
     }
 
     private void updateStatus() {
-        String turn = (board.getCurrentTurn() == Board.Turn.HUNTED) ? "Fugitive (F)" : "Attacker (A)";
+        String turn = (board.getCurrentTurn() == Board.Turn.FUGITIVE) ? "Fugitive (F)" : "Hunter (H)";
         int remaining = board.getMaxMoves() - board.getMoveCount();
         statusLabel.setText("Turn: " + turn + "   |   Moves used: " + board.getMoveCount() + " / " + board.getMaxMoves() + "   |   Remaining: " + remaining);
     }
@@ -156,7 +156,7 @@ public class BoardGUI {
     private boolean isCurrentPlayerPiece(Field field) {
 
         Field.PieceType pieceType = field.getPieceType();
-        return (board.getCurrentTurn() == Board.Turn.HUNTED && pieceType == Field.PieceType.HUNTED) ||
+        return (board.getCurrentTurn() == Board.Turn.FUGITIVE && pieceType == Field.PieceType.FUGITIVE) ||
                 (board.getCurrentTurn() == Board.Turn.HUNTER && pieceType == Field.PieceType.HUNTER);
 
     }
